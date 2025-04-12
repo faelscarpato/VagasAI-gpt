@@ -1,0 +1,6 @@
+body { font-family: 'Inter', sans-serif; }
+.section-content { display: none; }
+.section-content.active { display: block; }
+.modal-hidden { display: none; }
+.modal { z-index: 9999; }
+#mobile-menu { transition: all 0.3s ease-in-out; }
