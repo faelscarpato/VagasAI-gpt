@@ -1,35 +1,1494 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VagaAI</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/css/style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VagaAI - Ferramentas de RH (Mock Data)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Include Chart.js (Optional, for better charts later) -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .modal { transition: opacity 0.25s ease; }
+        .modal-content { transition: transform 0.25s ease; }
+        .modal-hidden { pointer-events: none; opacity: 0; }
+        .modal-hidden .modal-content { transform: translateY(-50px); }
+        .modal-visible { opacity: 1; pointer-events: auto; }
+        .modal-visible .modal-content { transform: translateY(0); }
+
+        /* Estilos de Ordenação */
+        .sortable-header { cursor: pointer; }
+        .sortable-header i { opacity: 0.4; margin-left: 4px; transition: opacity 0.2s ease; }
+        .sortable-header:hover i { opacity: 0.8; }
+        .sortable-header.asc i.fa-sort, .sortable-header.desc i.fa-sort { display: none; }
+        .sortable-header.asc i.fa-sort-up, .sortable-header.desc i.fa-sort-down { display: inline-block; opacity: 1; }
+        .sortable-header i.fa-sort-up, .sortable-header i.fa-sort-down { display: none; }
+
+        /* Estilos para badges de match */
+        .match-alto { background-color: #e0f2fe; color: #0284c7; /* bg-sky-100 text-sky-700 */ }
+        .match-medio { background-color: #dcfce7; color: #16a34a; /* bg-green-100 text-green-700 */ }
+        .match-baixo { background-color: #fee2e2; color: #dc2626; /* bg-red-100 text-red-700 */ }
+        /* Estilo para aba de filtro ativa */
+        .filter-tab-active { background-color: #e5e7eb; /* bg-gray-200 */ color: #1f2937; /* text-gray-800 */ font-weight: 500; border-color: #d1d5db; /* border-gray-300 */ }
+        .filter-tab-inactive { background-color: transparent; /* bg-gray-50 */ color: #6b7280; /* text-gray-500 */ border-color: transparent; }
+        .filter-tab-inactive:hover { background-color: #f3f4f6; /* hover:bg-gray-100 */ border-color: #d1d5db; /* border-gray-300 */ }
+        /* Badge etapa simples */
+        .etapa-badge { background-color: #f3f4f6; color: #4b5563; /* bg-gray-100 text-gray-600 */ }
+        /* Badge Status Onboarding */
+        .status-onboarding-documentacao { background-color: #fef3c7; color: #b45309; /* bg-amber-100 text-amber-700 */ }
+        .status-onboarding-exames { background-color: #e0e7ff; color: #4338ca; /* bg-indigo-100 text-indigo-700 */ }
+        .status-onboarding-contrato { background-color: #dbeafe; color: #1d4ed8; /* bg-blue-100 text-blue-700 */ }
+        .status-onboarding-pronto { background-color: #dcfce7; color: #16a34a; /* bg-green-100 text-green-700 */ }
+        .status-onboarding-pendente { background-color: #fee2e2; color: #b91c1c; /* bg-red-100 text-red-700 */ }
+
+        /* Estilos para sidebar recolhida */
+        #sidebar.w-20 .sidebar-text { display: none; }
+        #sidebar.w-20 .justify-between { justify-content: center; }
+         #sidebar.w-20 #sidebar-nav .nav-link,
+         #sidebar.w-20 #sidebar-nav #rh-tools-toggle { justify-content: center; }
+         #sidebar.w-20 #sidebar-nav #rh-tools-toggle .fa-chevron-down { display: none; }
+         #sidebar.w-20 #rh-tools-submenu { display: none; }
+
+         /* Estilos para Análise Visual de CV */
+        .cv-score-circle {
+            width: 120px; height: 120px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            position: relative; border: 8px solid #e5e7eb; /* bg-gray-200 */
+        }
+        .cv-score-progress { /* Será a parte colorida */
+            position: absolute; top: -8px; left: -8px; right: -8px; bottom: -8px;
+            border-radius: 50%; border: 8px solid transparent;
+            /* A cor e o preenchimento serão definidos via JS/inline style */
+            /* Ex: border-top-color: #22c55e; transform: rotate(...) */
+            clip-path: polygon(50% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 50% 0%, 50% 50%); /* Placeholder for conic-gradient */
+        }
+        .cv-score-text { font-size: 1.8rem; font-weight: 600; }
+        .cv-criteria-bar-bg { background-color: #e5e7eb; /* bg-gray-200 */ height: 8px; border-radius: 4px; overflow: hidden; }
+        .cv-criteria-bar-fill { background-color: #3b82f6; /* bg-blue-500 */ height: 100%; border-radius: 4px; transition: width 0.5s ease-out; }
+        .cv-keyword-tag { background-color: #e0f2fe; color: #0284c7; /* bg-sky-100 text-sky-700 */ padding: 2px 8px; border-radius: 9999px; font-size: 0.8rem; margin: 2px; display: inline-block; }
+        .cv-keyword-missing { background-color: #fee2e2; color: #dc2626; /* bg-red-100 text-red-700 */ } /* Exemplo */
+    </style>
 </head>
-<body class="bg-gray-50">
-  
-  <!-- Sidebar e Header -->
-  <header id="header"></header>
-  <aside id="sidebar"></aside>
+<body class="bg-gray-100 flex">
 
-  <!-- Conteúdo principal -->
-  <main id="main-content" class="flex-1 p-4 md:ml-64"></main>
+    <aside id="sidebar" class="w-64 h-screen bg-[#0a192f] text-gray-300 flex flex-col fixed left-0 top-0 z-20 transition-all duration-300 ease-in-out">
+        <!-- Sidebar Content (inalterado) -->
+        <div class="h-16 flex items-center justify-between px-4 border-b border-gray-700">
+            <h1 class="text-xl font-bold text-white sidebar-text">VagaAI</h1>
+            <button id="sidebar-toggle-button" class="text-gray-400 hover:text-white p-2 -mr-2">
+                <i id="sidebar-toggle-icon" class="fas fa-chevron-left"></i>
+            </button>
+        </div>
+        <nav id="sidebar-nav" class="flex-1 mt-4 px-2 space-y-1 overflow-y-auto no-scrollbar">
+            <a href="#analisar-curriculo" class="nav-link flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white">
+                <i class="fas fa-search mr-3 w-5 text-center"></i><span class="sidebar-text">Analisar Currículo</span>
+            </a>
+            <div class="relative">
+                <button id="rh-tools-toggle" class="nav-link flex items-center w-full px-4 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white justify-between">
+                    <span class="flex items-center">
+                        <i class="fas fa-tools mr-3 w-5 text-center"></i><span class="sidebar-text">Ferramentas de RH</span>
+                    </span>
+                    <i id="rh-tools-chevron" class="fas fa-chevron-down transition-transform duration-200 sidebar-text"></i>
+                </button>
+                <div id="rh-tools-submenu" class="hidden mt-1 pl-5 space-y-1">
+                    <a href="#dashboard" class="submenu-link block px-3 py-1 text-sm rounded-md text-gray-400 hover:bg-gray-700 hover:text-white"><i class="fas fa-tachometer-alt mr-2 w-4 text-center"></i><span class="sidebar-text">Dashboard</span></a>
+                    <a href="#vagas" class="submenu-link block px-3 py-1 text-sm rounded-md text-gray-400 hover:bg-gray-700 hover:text-white"><i class="fas fa-briefcase mr-2 w-4 text-center"></i><span class="sidebar-text">Vagas</span></a>
+                    <a href="#candidatos" class="submenu-link block px-3 py-1 text-sm rounded-md text-gray-400 hover:bg-gray-700 hover:text-white"><i class="fas fa-users mr-2 w-4 text-center"></i><span class="sidebar-text">Candidatos</span></a>
+                    <a href="#onboarding" class="submenu-link block px-3 py-1 text-sm rounded-md text-gray-400 hover:bg-gray-700 hover:text-white"><i class="fas fa-clipboard-check mr-2 w-4 text-center"></i><span class="sidebar-text">Onboarding</span></a>
+                </div>
+            </div>
+            <a href="#configuracoes" class="nav-link flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white">
+                <i class="fas fa-cog mr-3 w-5 text-center"></i><span class="sidebar-text">Configurações</span>
+            </a>
+        </nav>
+    </aside>
 
-  <!-- Modais -->
-  <div id="modais"></div>
+    <main id="main-content-area" class="flex-1 ml-64 h-screen overflow-y-auto no-scrollbar transition-all duration-300 ease-in-out">
+        <header class="bg-white shadow-sm sticky top-0 z-10">
+             <!-- Header Content (inalterado) -->
+             <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center">
+                         <button class="text-gray-500 mr-4 md:hidden"><i class="fas fa-bars"></i></button>
+                         <div>
+                            <h2 class="text-lg md:text-xl font-semibold text-gray-800">Ferramentas de RH</h2>
+                            <p class="text-xs md:text-sm text-gray-500 hidden sm:block">Sistema completo para gerenciamento...</p>
+                         </div>
+                    </div>
+                    <div class="flex items-center space-x-2 md:space-x-4">
+                        <button id="config-button" class="flex items-center text-xs md:text-sm text-gray-600 hover:text-gray-900 bg-gray-100 px-2 py-1 md:px-3 md:py-1.5 rounded-md border border-gray-300 hover:bg-gray-200"><i class="fas fa-cog mr-1 md:mr-2"></i><span class="hidden sm:inline">Configurações</span></button>
+                        <button id="nova-vaga-button-header" class="flex items-center text-xs md:text-sm text-white bg-[#007bff] hover:bg-[#0056b3] px-2 py-1 md:px-3 md:py-1.5 rounded-md"><i class="fas fa-plus mr-1 md:mr-2"></i>Nova Vaga</button>
+                    </div>
+                </div>
+                 <nav id="main-tabs" class="flex space-x-2 md:space-x-4 border-t border-gray-200 pt-2 pb-2 -mb-px overflow-x-auto no-scrollbar">
+                    <a href="#dashboard" class="tab-link px-3 py-2 font-medium text-sm rounded-md text-gray-700 bg-gray-100 border border-gray-300 flex items-center whitespace-nowrap flex-shrink-0"><i class="fas fa-tachometer-alt mr-2"></i> Dashboard</a>
+                    <a href="#vagas" class="tab-link px-3 py-2 font-medium text-sm rounded-md text-gray-500 hover:text-gray-700 flex items-center relative whitespace-nowrap flex-shrink-0 border border-transparent"><i class="fas fa-briefcase mr-2"></i> Vagas<span id="vagas-count" class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">0</span></a>
+                    <a href="#candidatos" class="tab-link px-3 py-2 font-medium text-sm rounded-md text-gray-500 hover:text-gray-700 flex items-center relative whitespace-nowrap flex-shrink-0 border border-transparent"><i class="fas fa-users mr-2"></i> Candidatos<span id="candidatos-count" class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">0</span></a>
+                    <a href="#onboarding" class="tab-link px-3 py-2 font-medium text-sm rounded-md text-gray-500 hover:text-gray-700 flex items-center whitespace-nowrap flex-shrink-0 border border-transparent"><i class="fas fa-clipboard-check mr-2"></i> Onboarding<span id="onboarding-count" class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">0</span></a>
+                 </nav>
+            </div>
+        </header>
 
-  <!-- Scripts -->
-  <script src="/assets/libs/pdf.min.js"></script>
-  <script src="/assets/libs/mammoth.browser.min.js"></script>
-  <script src="/assets/libs/jspdf.umd.min.js"></script>
+        <div id="page-content" class="py-6">
+            <!-- Seção Dashboard (inalterado) -->
+            <div id="dashboard-content" class="page-section max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Visão Geral de RH</h3>
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+                     <div class="bg-white overflow-hidden shadow rounded-lg"> <div class="p-5"> <div class="flex items-center"> <div class="flex-shrink-0 bg-blue-500 rounded-md p-3"><i class="fas fa-briefcase text-white h-6 w-6"></i></div> <div class="ml-5 w-0 flex-1"> <dl> <dt class="text-sm font-medium text-gray-500 truncate">Vagas Abertas</dt> <dd id="vagas-abertas-card" class="text-3xl font-semibold text-gray-900">0</dd> </dl> </div> </div> </div> <div class="bg-gray-50 px-5 py-3"> <div id="vagas-semana-info" class="text-sm text-green-600">Carregando...</div> </div> </div>
+                     <div class="bg-white overflow-hidden shadow rounded-lg"> <div class="p-5"> <div class="flex items-center"> <div class="flex-shrink-0 bg-purple-500 rounded-md p-3"><i class="fas fa-users text-white h-6 w-6"></i></div> <div class="ml-5 w-0 flex-1"> <dl> <dt class="text-sm font-medium text-gray-500 truncate">Candidatos Ativos</dt> <dd id="candidatos-ativos-card" class="text-3xl font-semibold text-gray-900">0</dd> </dl> </div> </div> </div> <div class="bg-gray-50 px-5 py-3"> <div id="candidaturas-semana-info" class="text-sm text-green-600">Carregando...</div> </div> </div>
+                     <div class="bg-white overflow-hidden shadow rounded-lg"> <div class="p-5"> <div class="flex items-center"> <div class="flex-shrink-0 bg-green-500 rounded-md p-3"><i class="fas fa-clipboard-check text-white h-6 w-6"></i></div> <div class="ml-5 w-0 flex-1"> <dl> <dt class="text-sm font-medium text-gray-500 truncate">Onboarding</dt> <dd id="onboarding-card" class="text-3xl font-semibold text-gray-900">0</dd> </dl> </div> </div> </div> <div class="bg-gray-50 px-5 py-3"> <div class="text-sm text-gray-500">Novos colaboradores em processo</div> </div> </div>
+                </div>
+                <div class="grid grid-cols-1 gap-6">
+                    <div class="bg-white shadow rounded-lg p-5">
+                        <h4 class="text-base font-medium text-gray-900 mb-1">Candidatos Recentes</h4>
+                        <p class="text-sm text-gray-500 mb-4">Últimas candidaturas recebidas</p>
+                        <ul id="recent-candidates-list" class="divide-y divide-gray-200">
+                            <li class="py-3 text-center text-gray-500">Carregando candidatos...</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
 
-  <!-- App JS -->
-  <script src="/assets/js/mocks.js"></script>
-  <script src="/assets/js/dashboard.js"></script>
-  <script src="/assets/js/vagas.js"></script>
-  <script src="/assets/js/candidatos.js"></script>
-  <script src="/assets/js/analise.js"></script>
-  <script src="/assets/js/app.js"></script>
+            <!-- Seção Vagas (inalterado) -->
+            <div id="vagas-content" class="page-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <h3 class="text-xl leading-6 font-semibold text-gray-900">Vagas</h3>
+                    <div class="flex items-center space-x-2 w-full sm:w-auto">
+                        <div class="relative flex-grow sm:flex-grow-0">
+                            <input type="text" id="vagas-search" placeholder="Buscar vagas..." class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md pl-10 p-2 border">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-search text-gray-400"></i>
+                            </div>
+                        </div>
+                        <button id="vagas-filter-button" class="p-2 border border-gray-300 rounded-md text-gray-600 hover:bg-gray-50">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                        <button id="nova-vaga-button-vagas" class="flex items-center text-sm text-white bg-[#007bff] hover:bg-[#0056b3] px-3 py-2 rounded-md whitespace-nowrap">
+                            <i class="fas fa-plus mr-2"></i>
+                            Nova Vaga
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white shadow overflow-hidden rounded-lg">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="titulo">Cargo <i class="fas fa-sort"></i><i class="fas fa-sort-up"></i><i class="fas fa-sort-down"></i></th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="departamento">Departamento <i class="fas fa-sort"></i><i class="fas fa-sort-up"></i><i class="fas fa-sort-down"></i></th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="status">Status <i class="fas fa-sort"></i><i class="fas fa-sort-up"></i><i class="fas fa-sort-down"></i></th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="candidatoCount">Candidatos <i class="fas fa-sort"></i><i class="fas fa-sort-up"></i><i class="fas fa-sort-down"></i></th>
+                                    <th scope="col" class="relative px-6 py-3">
+                                        <span class="sr-only">Ações</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="vagas-table-body" class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        Carregando vagas...
+                                    </td>
+                                </tr>
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+                 <div class="mt-4 flex justify-center">
+                     <span class="text-sm text-gray-500">Paginação será adicionada aqui</span>
+                 </div>
+            </div>
+
+            <!-- Seção Analisar Currículo (Layout Visual Implementado) -->
+            <div id="analisar-curriculo-content" class="page-section hidden max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Analisar Currículo com IA</h3>
+                 <div class="bg-white shadow rounded-lg p-5">
+                    <label for="curriculo-text" class="block text-sm font-medium text-gray-700 mb-2">Cole o texto do currículo abaixo:</label>
+                    <textarea id="curriculo-text" rows="10" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-gray-300 rounded-md p-2" placeholder="Insira o currículo aqui..."></textarea>
+                    <div class="mt-4">
+                        <label for="vaga-analise-select" class="block text-sm font-medium text-gray-700 mb-1">Analisar para a vaga:</label>
+                        <select id="vaga-analise-select" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-gray-300 rounded-md p-2">
+                            <option value="">Carregando vagas...</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Input de Arquivo + Ações Pós-Análise -->
+<div class="mt-4">
+  <label class="block text-sm font-medium text-gray-700 mb-1">Ou envie um arquivo:</label>
+  <input type="file" id="curriculo-arquivo" accept=".txt,.pdf,.docx" class="block w-full text-sm text-gray-700 border border-gray-300 rounded-md cursor-pointer bg-white p-2">
+</div>
+
+<div class="mt-4 flex flex-wrap gap-3">
+  <button id="baixar-pdf-analise" class="hidden bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm">Baixar Análise em PDF</button>
+  <button id="adicionar-candidato-pos-analise" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">Adicionar Candidato</button>
+</div>
+
+
+                    <div class="mt-4 flex justify-end">
+                        <button id="analisar-button" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Analisar com IA
+                            <i class="fas fa-spinner fa-spin ml-2 hidden" id="analise-spinner"></i>
+                        </button>
+                    </div>
+                    <!-- === NOVO LAYOUT VISUAL PARA RESULTADO DA ANÁLISE === -->
+                    <div id="analise-resultado" class="mt-6 hidden space-y-6">
+                        <h4 class="text-base font-medium text-gray-900 mb-2">Resultado da Análise Visual:</h4>
+
+                        <!-- Card 1: Resumo Geral e Pontuação -->
+                        <div class="bg-gray-50 p-4 rounded-md border border-gray-200 flex flex-col md:flex-row items-center gap-4">
+                            <div class="flex-shrink-0">
+                                <!-- Placeholder para Círculo de Pontuação -->
+                                <div id="cv-score-circle-container" class="cv-score-circle mx-auto">
+                                     <!-- <div class="cv-score-progress" id="cv-score-progress-bar"></div> -->
+                                     <span id="cv-score-text" class="cv-score-text text-gray-700">--%</span>
+                                </div>
+                            </div>
+                            <div class="flex-1 text-center md:text-left">
+                                <p id="cv-candidate-name" class="text-lg font-semibold text-gray-800">Nome do Candidato</p>
+                                <p id="cv-match-status" class="text-sm font-medium text-gray-600 mt-1">Status Match</p>
+                                <div id="cv-quick-highlights" class="mt-2 flex flex-wrap justify-center md:justify-start gap-2">
+                                    <!-- Ícones de destaque rápido serão inseridos aqui -->
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800"><i class="fas fa-check mr-1"></i> Destaque 1</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800"><i class="fas fa-exclamation-triangle mr-1"></i> Atenção 1</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Análise Detalhada por Critérios -->
+                        <div class="bg-gray-50 p-4 rounded-md border border-gray-200">
+                            <h5 class="text-sm font-medium text-gray-800 mb-3">Análise por Critérios</h5>
+                            <div id="cv-criteria-analysis" class="space-y-3">
+                                <!-- Barras de critério serão inseridas aqui -->
+                                <div class="criteria-item">
+                                    <div class="flex justify-between text-xs text-gray-600 mb-1">
+                                        <span>Critério Exemplo</span>
+                                        <span>--%</span>
+                                    </div>
+                                    <div class="cv-criteria-bar-bg">
+                                        <div class="cv-criteria-bar-fill" style="width: 0%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Compatibilidade de Palavras-Chave e Habilidades -->
+                        <div class="bg-gray-50 p-4 rounded-md border border-gray-200">
+                             <h5 class="text-sm font-medium text-gray-800 mb-3">Palavras-Chave e Habilidades</h5>
+                             <div id="cv-keywords-cloud" class="mb-4">
+                                 <!-- Tags de palavras-chave serão inseridas aqui -->
+                                 <span class="cv-keyword-tag">Keyword</span>
+                             </div>
+                             <h6 class="text-xs font-medium text-gray-600 mb-2 uppercase">Comparativo Requisitos vs CV</h6>
+                             <div id="cv-skills-comparison" class="text-xs">
+                                 <!-- Tabela ou lista comparativa será inserida aqui -->
+                                 <p>Comparativo...</p>
+                             </div>
+                        </div>
+
+                        <!-- Card 4: Resumo e Insights da IA -->
+                        <div class="bg-gray-50 p-4 rounded-md border border-gray-200">
+                             <h5 class="text-sm font-medium text-gray-800 mb-3">Insights da IA</h5>
+                             <div id="cv-insights-summary" class="text-sm text-gray-700 mb-4">
+                                 <p>Resumo gerado pela IA...</p>
+                             </div>
+                             <h6 class="text-xs font-medium text-gray-600 mb-2 uppercase">Sugestões para Entrevista</h6>
+                             <ul id="cv-interview-questions" class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                                 <li>Sugestão 1...</li>
+                             </ul>
+                             <div id="cv-red-flags" class="mt-4">
+                                 <!-- Alertas/Red flags serão inseridos aqui -->
+                             </div>
+                        </div>
+
+                        <!-- Fallback para texto original -->
+                        <div id="analise-resultado-texto-original" class="mt-4 hidden">
+                            <h5 class="text-sm font-medium text-gray-800 mb-2">Texto Original da Análise:</h5>
+                            <div class="bg-gray-100 p-3 rounded border border-gray-300 text-xs whitespace-pre-wrap">
+                                <p id="resultado-texto-fallback"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- === FIM NOVO LAYOUT VISUAL === -->
+                 </div>
+            </div>
+
+            <!-- Seção Candidatos (inalterado) -->
+            <div id="candidatos-content" class="page-section hidden max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+                <!-- Header: Título + Busca + Ações -->
+                <div class="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <h3 class="text-xl leading-6 font-semibold text-gray-900">Candidatos</h3>
+                    <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
+                        <div class="relative flex-grow sm:flex-grow-0">
+                            <input type="text" id="candidatos-search" placeholder="Buscar candidatos..." class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md pl-10 p-2 border">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-search text-gray-400"></i>
+                            </div>
+                        </div>
+                        <button id="candidatos-filter-button" class="p-2 border border-gray-300 rounded-md text-gray-600 hover:bg-gray-50">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                        <button id="adicionar-candidato-button" class="flex items-center text-sm text-white bg-[#007bff] hover:bg-[#0056b3] px-3 py-2 rounded-md whitespace-nowrap">
+                            <i class="fas fa-plus mr-2"></i>
+                            Adicionar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filtros -->
+                <div id="candidatos-filter-tabs" class="mb-6 flex space-x-1 border-b border-gray-200">
+                    <button class="filter-tab py-2 px-4 text-sm rounded-t-md border filter-tab-active" data-filter="todos">Todos</button>
+                    <button class="filter-tab py-2 px-4 text-sm rounded-t-md border filter-tab-inactive" data-filter="alto">Alto Match</button>
+                    <button class="filter-tab py-2 px-4 text-sm rounded-t-md border filter-tab-inactive" data-filter="entrevista">Em Entrevista</button>
+                    <button class="filter-tab py-2 px-4 text-sm rounded-t-md border filter-tab-inactive" data-filter="triagem">Triagem</button>
+                </div>
+
+                <!-- Tabela de Candidatos -->
+                <div class="bg-white shadow overflow-hidden rounded-lg">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="nome">Candidato <i class="fas fa-sort"></i><i class="fas fa-sort-up"></i><i class="fas fa-sort-down"></i></th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="vaga">Vaga <i class="fas fa-sort"></i><i class="fas fa-sort-up"></i><i class="fas fa-sort-down"></i></th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="etapa">Etapa <i class="fas fa-sort"></i><i class="fas fa-sort-up"></i><i class="fas fa-sort-down"></i></th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="match">Match <i class="fas fa-sort"></i><i class="fas fa-sort-up"></i><i class="fas fa-sort-down"></i></th>
+                                    <th scope="col" class="relative px-6 py-3">
+                                        <span class="sr-only">Ações</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="candidatos-table-body" class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        Carregando candidatos...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="mt-4 flex justify-center">
+                     <span class="text-sm text-gray-500">Paginação será adicionada aqui</span>
+                 </div>
+            </div>
+            <!-- Fim Seção Candidatos -->
+
+            <!-- ================================= -->
+            <!-- === Seção Onboarding (NOVO) === -->
+            <!-- ================================= -->
+            <div id="onboarding-content" class="page-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <!-- Header: Título + Busca + Ações -->
+                <div class="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <h3 class="text-xl leading-6 font-semibold text-gray-900">Onboarding de Colaboradores</h3>
+                    <div class="flex items-center space-x-2 w-full sm:w-auto">
+                        <div class="relative flex-grow sm:flex-grow-0">
+                            <input type="text" id="onboarding-search" placeholder="Buscar colaborador..." class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md pl-10 p-2 border">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-search text-gray-400"></i>
+                            </div>
+                        </div>
+                        <button id="onboarding-filter-button" class="p-2 border border-gray-300 rounded-md text-gray-600 hover:bg-gray-50">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                        <!-- <button id="novo-onboarding-button" class="flex items-center text-sm text-white bg-[#16a34a] hover:bg-[#15803d] px-3 py-2 rounded-md whitespace-nowrap">
+                            <i class="fas fa-plus mr-2"></i>
+                            Iniciar Onboarding
+                        </button> -->
+                    </div>
+                </div>
+
+                <!-- Tabela de Onboarding -->
+                <div class="bg-white shadow overflow-hidden rounded-lg">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="nome">Colaborador <i class="fas fa-sort"></i><i class="fas fa-sort-up"></i><i class="fas fa-sort-down"></i></th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="vaga">Vaga <i class="fas fa-sort"></i><i class="fas fa-sort-up"></i><i class="fas fa-sort-down"></i></th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="status">Status Atual <i class="fas fa-sort"></i><i class="fas fa-sort-up"></i><i class="fas fa-sort-down"></i></th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="data_inicio">Data de Início <i class="fas fa-sort"></i><i class="fas fa-sort-up"></i><i class="fas fa-sort-down"></i></th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="responsavel">Responsável <i class="fas fa-sort"></i><i class="fas fa-sort-up"></i><i class="fas fa-sort-down"></i></th>
+                                    <th scope="col" class="relative px-6 py-3">
+                                        <span class="sr-only">Ações</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="onboarding-table-body" class="bg-white divide-y divide-gray-200">
+                                <!-- Conteúdo da tabela gerado por JS -->
+                                <tr>
+                                    <td colspan="6" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        Carregando processos de onboarding...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                 <div class="mt-4 flex justify-center">
+                     <span class="text-sm text-gray-500">Paginação será adicionada aqui</span>
+                 </div>
+            </div>
+            <!-- Fim Seção Onboarding -->
+
+            <!-- Seção Configurações (inalterado) -->
+            <div id="configuracoes-content" class="page-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h3 class="text-lg">Conteúdo Configurações</h3>
+                <p>Opções de configuração serão implementadas aqui...</p>
+            </div>
+
+        </div> <!-- Fim #page-content -->
+    </main> <!-- Fim #main-content-area -->
+
+    <!-- Modal Nova Vaga (inalterado) -->
+    <div id="nova-vaga-modal" class="modal modal-hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-30 px-4">
+        <div class="modal-content bg-white p-6 md:p-8 rounded-lg shadow-xl w-full max-w-md mx-auto">
+             <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-800">Criar Nova Vaga</h3>
+                <button id="close-modal-button" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+             </div>
+            <form id="nova-vaga-form">
+                <div class="mb-4"> <label for="vaga-titulo" class="block text-sm font-medium text-gray-700 mb-1">Título da Vaga</label> <input type="text" id="vaga-titulo" name="titulo" required class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" placeholder="Ex: Desenvolvedor Frontend Pleno"> </div>
+                <div class="mb-4"> <label for="vaga-departamento" class="block text-sm font-medium text-gray-700 mb-1">Departamento</label> <input type="text" id="vaga-departamento" name="departamento" required class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" placeholder="Ex: Tecnologia"> </div>
+                <div class="mb-4"> <label for="vaga-descricao" class="block text-sm font-medium text-gray-700 mb-1">Descrição</label> <textarea id="vaga-descricao" name="descricao" rows="3" required class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" placeholder="Detalhes da vaga..."></textarea> </div>
+                <div class="mb-4"> <label for="vaga-requisitos" class="block text-sm font-medium text-gray-700 mb-1">Requisitos</label> <textarea id="vaga-requisitos" name="requisitos" rows="3" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" placeholder="Requisitos da vaga..."></textarea> </div>
+                <div class="mt-6 flex justify-end space-x-3"> <button type="button" id="cancel-modal-button" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"> Cancelar </button> <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"> Salvar Vaga <i class="fas fa-spinner fa-spin ml-2 hidden" id="salvar-vaga-spinner"></i> </button> </div>
+                <p id="modal-error-message" class="text-red-500 text-sm mt-2 text-right hidden"></p>
+            </form>
+        </div>
+    </div>
+
+<!-- Modal Adicionar Candidato --><div id="novo-candidato-modal" class="modal modal-hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-30 px-4">
+  <div class="modal-content bg-white p-6 md:p-8 rounded-lg shadow-xl w-full max-w-md mx-auto">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-semibold text-gray-800">Adicionar Novo Candidato</h3>
+      <button id="close-candidato-modal" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+    </div>
+    <form id="novo-candidato-form">
+      <div class="mb-4">
+        <label for="candidato-nome" class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+        <input type="text" id="candidato-nome" required class="w-full border border-gray-300 rounded-md p-2" placeholder="Ex: João da Silva">
+      </div>
+      <div class="mb-4">
+        <label for="candidato-email" class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+        <input type="email" id="candidato-email" required class="w-full border border-gray-300 rounded-md p-2">
+      </div>
+      <div class="mb-4">
+        <label for="candidato-vaga" class="block text-sm font-medium text-gray-700 mb-1">Vaga</label>
+        <select id="candidato-vaga" required class="w-full border border-gray-300 rounded-md p-2">
+          <option value="">Selecione uma vaga</option>
+        </select>
+      </div>
+      <div class="mb-4">
+        <label for="candidato-status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+        <select id="candidato-status" required class="w-full border border-gray-300 rounded-md p-2">
+          <option value="Em Análise">Em Análise</option>
+          <option value="Entrevista Agendada">Entrevista Agendada</option>
+          <option value="Aprovado">Aprovado</option>
+          <option value="Rejeitado">Rejeitado</option>
+        </select>
+      </div>
+      <div class="mb-4">
+        <label for="candidato-score" class="block text-sm font-medium text-gray-700 mb-1">Score</label>
+        <input type="number" id="candidato-score" required min="0" max="100" class="w-full border border-gray-300 rounded-md p-2" placeholder="Ex: 85">
+      </div>
+      <div class="mt-6 flex justify-end space-x-3">
+        <button type="button" id="cancelar-candidato-modal" class="bg-white py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">Cancelar</button>
+        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-md text-sm font-medium">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div><!-- Input Upload + Botões extras na seção de Análise -->
+
+<!-- Scripts de Bibliotecas -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+
+<script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- Script de Funcionalidade -->
+<script>
+  document.getElementById("curriculo-arquivo").addEventListener("change", async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    const ext = file.name.split('.').pop().toLowerCase();
+    const curriculoText = document.getElementById("curriculo-text");
+
+    if (ext === "txt") {
+      const reader = new FileReader();
+      reader.onload = e => curriculoText.value = e.target.result;
+      reader.readAsText(file);
+    } else if (ext === "pdf") {
+      const reader = new FileReader();
+      reader.onload = async e => {
+        const typedArray = new Uint8Array(e.target.result);
+        const pdf = await pdfjsLib.getDocument(typedArray).promise;
+        let text = "";
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          text += content.items.map(item => item.str).join(" ") + "\\n";
+        }
+        curriculoText.value = text;
+      };
+      reader.readAsArrayBuffer(file);
+    } else if (ext === "docx") {
+      const reader = new FileReader();
+      reader.onload = async e => {
+        const result = await mammoth.extractRawText({ arrayBuffer: e.target.result });
+        curriculoText.value = result.value;
+      };
+      reader.readAsArrayBuffer(file);
+    }
+  });
+
+  document.getElementById("baixar-pdf-analise").addEventListener("click", () => {
+    const content = document.getElementById("analise-resultado").innerText;
+    const doc = new jspdf.jsPDF();
+    doc.text(content, 10, 10);
+    doc.save("analise-curriculo.pdf");
+  });
+
+  document.getElementById("adicionar-candidato-pos-analise").addEventListener("click", () => {
+    const texto = document.getElementById("curriculo-text").value;
+    const nomeMatch = texto.match(/(?<=Nome:|Nome\\s)[A-ZÀ-ÿ][a-zà-ÿ]+\\s[A-ZÀ-ÿ][a-zà-ÿ]+/);
+    const emailMatch = texto.match(/[\\w.-]+@[\\w.-]+\\.[a-z]{2,}/gi);
+    const score = parseInt(document.getElementById("cv-score-text").textContent) || 0;
+    document.getElementById("candidato-nome").value = nomeMatch ? nomeMatch[0] : "";
+    document.getElementById("candidato-email").value = emailMatch ? emailMatch[0] : "";
+    document.getElementById("candidato-score").value = score;
+    document.getElementById("candidato-vaga").value = document.getElementById("vaga-analise-select").value;
+    document.getElementById("novo-candidato-modal").classList.remove("modal-hidden");
+  });
+
+  document.getElementById("analisar-button").addEventListener("click", () => {
+    setTimeout(() => {
+      document.getElementById("baixar-pdf-analise").classList.remove("hidden");
+      document.getElementById("adicionar-candidato-pos-analise").classList.remove("hidden");
+    }, 2000);
+  });
+</script>
+
+    <script>
+        // Configurações da API de IA do Google
+        const GOOGLE_AI_API_KEY = 'AIzaSyD2LCVgrhfoo41eAorFabcDoZpkaUCmmFs';
+        const GOOGLE_AI_MODEL = 'gemini-1.5-flash';
+        const GOOGLE_AI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GOOGLE_AI_MODEL}:generateContent?key=${GOOGLE_AI_API_KEY}`;
+    
+        // Mock data para outras funcionalidades
+        const mockVagas = [
+            { id: 1, titulo: 'Desenvolvedor Frontend', departamento: 'Tecnologia', status: 'Aberta', data_criacao: '2024-07-20T10:00:00Z', descricao: 'Desenvolvimento de interfaces web modernas.', requisitos: 'React, JavaScript, CSS' },
+            { id: 2, titulo: 'UX Designer', departamento: 'Produto', status: 'Aberta', data_criacao: '2024-07-18T15:30:00Z', descricao: 'Criação de experiências de usuário intuitivas.', requisitos: 'Figma, Prototipagem' },
+            { id: 3, titulo: 'Desenvolvedor Backend', departamento: 'Tecnologia', status: 'Aberta', data_criacao: '2024-06-10T09:00:00Z', descricao: 'Desenvolvimento de APIs e sistemas escaláveis.', requisitos: 'Node.js, SQL, Cloud' },
+            { id: 4, titulo: 'Gerente de Produto', departamento: 'Produto', status: 'Aberta', data_criacao: '2024-07-21T11:00:00Z', descricao: 'Gestão de ciclo de vida de produtos.', requisitos: 'Metodologias Ágeis, Liderança' },
+            { id: 5, titulo: 'Analista de Marketing', departamento: 'Marketing', status: 'Aberta', data_criacao: '2024-07-22T08:00:00Z', descricao: 'Planejamento de campanhas digitais.', requisitos: 'Google Ads, SEO' },
+            { id: 6, titulo: 'Analista de RH Jr', departamento: 'Recursos Humanos', status: 'Fechada', data_criacao: '2024-05-15T09:00:00Z', descricao: 'Suporte em processos de RH.', requisitos: 'Psicologia, Excel' },
+        ];
+        const mockCandidatos = [
+            { id: 1, nome: 'João Silva', vaga: 'Desenvolvedor Frontend', status: 'Em Análise', data_aplicacao: '2024-07-22T14:20:00Z', score: 85 },
+            { id: 2, nome: 'Maria Oliveira', vaga: 'UX Designer', status: 'Entrevista Agendada', data_aplicacao: '2024-07-21T09:45:00Z', score: 78 },
+            { id: 3, nome: 'Pedro Santos', vaga: 'Desenvolvedor Backend', status: 'Rejeitado', data_aplicacao: '2024-07-20T16:30:00Z', score: 62 },
+            { id: 4, nome: 'Ana Costa', vaga: 'Gerente de Produto', status: 'Aprovado', data_aplicacao: '2024-07-19T11:15:00Z', score: 92 },
+            { id: 5, nome: 'Lucas Pereira', vaga: 'Analista de Marketing', status: 'Em Análise', data_aplicacao: '2024-07-18T13:50:00Z', score: 70 },
+            { id: 6, nome: 'Fernanda Lima', vaga: 'Analista de RH Jr', status: 'Aprovado', data_aplicacao: '2024-05-20T10:00:00Z', score: 88 },
+        ];
+        const mockCandidatosDetalhado = [
+            { id: 1, nome: 'João Silva', email: 'joao.silva@email.com', telefone: '(11) 98765-4321', vaga: 'Desenvolvedor Frontend', status: 'Em Análise', data_aplicacao: '2024-07-22T14:20:00Z', score: 85, experiencia: '5 anos em React e JavaScript', formacao: 'Ciência da Computação - USP', observacoes: 'Bom fit cultural.' },
+            { id: 2, nome: 'Maria Oliveira', email: 'maria.oliveira@email.com', telefone: '(21) 91234-5678', vaga: 'UX Designer', status: 'Entrevista Agendada', data_aplicacao: '2024-07-21T09:45:00Z', score: 78, experiencia: '3 anos em design de interfaces', formacao: 'Design Gráfico - UFRJ', observacoes: 'Portfólio impressionante.' },
+            { id: 3, nome: 'Pedro Santos', email: 'pedro.santos@email.com', telefone: '(31) 99876-5432', vaga: 'Desenvolvedor Backend', status: 'Rejeitado', data_aplicacao: '2024-07-20T16:30:00Z', score: 62, experiencia: '2 anos em Node.js', formacao: 'Engenharia de Software - UFMG', observacoes: 'Falta experiência em cloud.' },
+            { id: 4, nome: 'Ana Costa', email: 'ana.costa@email.com', telefone: '(41) 98765-1234', vaga: 'Gerente de Produto', status: 'Aprovado', data_aplicacao: '2024-07-19T11:15:00Z', score: 92, experiencia: '7 anos em gestão de produtos', formacao: 'Administração - FGV', observacoes: 'Liderança excepcional.' },
+            { id: 5, nome: 'Lucas Pereira', email: 'lucas.pereira@email.com', telefone: '(51) 97654-3210', vaga: 'Analista de Marketing', status: 'Em Análise', data_aplicacao: '2024-07-18T13:50:00Z', score: 70, experiencia: '4 anos em marketing digital', formacao: 'Publicidade - PUCRS', observacoes: 'Conhecimento em SEO.' },
+            { id: 6, nome: 'Fernanda Lima', email: 'fernanda.lima@email.com', telefone: '(61) 96543-2109', vaga: 'Analista de RH Jr', status: 'Aprovado', data_aplicacao: '2024-05-20T10:00:00Z', score: 88, experiencia: '2 anos em RH', formacao: 'Psicologia - UnB', observacoes: 'Boa comunicação.' },
+        ];
+        const mockOnboarding = [
+            { id: 1, nome: 'Ana Costa', vaga: 'Gerente de Produto', status: 'Documentação', data_inicio: '2024-07-25T09:00:00Z', progresso: 30 },
+            { id: 2, nome: 'Fernanda Lima', vaga: 'Analista de RH Jr', status: 'Treinamento', data_inicio: '2024-06-01T09:00:00Z', progresso: 70 },
+            { id: 3, nome: 'Carlos Mendes', vaga: 'Desenvolvedor Full Stack', status: 'Concluído', data_inicio: '2024-05-10T09:00:00Z', progresso: 100 },
+            { id: 4, nome: 'Juliana Almeida', vaga: 'Analista de Dados', status: 'Integração', data_inicio: '2024-07-20T09:00:00Z', progresso: 50 },
+            { id: 5, nome: 'Rafael Souza', vaga: 'Especialista em Infra', status: 'Documentação', data_inicio: '2024-07-15T09:00:00Z', progresso: 20 },
+        ];
+    
+        // Variáveis globais para elementos DOM
+        let sidebar, sidebarToggleButton, sidebarToggleIcon, mainContentArea, sidebarNav, mainTabs, pageContent,
+            recentCandidatesList, novaVagaButtonHeader, novaVagaModal, closeModalButton, cancelModalButton,
+            novaVagaForm, salvarVagaSpinner, modalErrorMessage, analisarCurriculoLink, analisarButton,
+            curriculoText, analiseResultado, analiseSpinner, vagaAnaliseSelect, configButton,
+            vagasTableBody, novaVagaButtonVagas, vagasSearchInput, vagasFilterButton,
+            rhToolsToggle, rhToolsSubmenu, rhToolsChevron,
+            candidatosTableBody, candidatosFilterTabs, adicionarCandidatoButton, candidatosSearchInput, candidatosFilterButton,
+            onboardingTableBody, onboardingSearchInput, onboardingFilterButton,
+            cvScoreCircleContainer, cvScoreText, cvCandidateName, cvMatchStatus, cvQuickHighlights,
+            cvCriteriaAnalysis, cvKeywordsCloud, cvSkillsComparison, cvInsightsSummary,
+            cvInterviewQuestions, cvRedFlags, analiseResultadoTextoOriginal, resultadoTextoFallback;
+    
+        // Estado da ordenação para tabelas
+        let sortState = {
+            vagas: { column: null, direction: 'asc' },
+            candidatos: { column: null, direction: 'asc' },
+            onboarding: { column: null, direction: 'asc' }
+        };
+    
+        // Função para formatar data ISO
+        function getFormattedDate(isoString) {
+            try {
+                const date = new Date(isoString);
+                return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            } catch (error) {
+                console.error('Erro ao formatar data:', error);
+                return isoString;
+            }
+        }
+    
+        // Função para obter classe de badge de match
+        function getMatchBadgeClass(nivel) {
+            switch (nivel) {
+                case 'Alto':
+                    return 'bg-green-100 text-green-800';
+                case 'Médio':
+                    return 'bg-yellow-100 text-yellow-800';
+                case 'Baixo':
+                    return 'bg-red-100 text-red-800';
+                default:
+                    return 'bg-gray-100 text-gray-800';
+            }
+        }
+    
+        // Função para obter classe de status de onboarding
+        function getOnboardingStatusClass(status) {
+            switch (status) {
+                case 'Documentação':
+                    return 'bg-blue-100 text-blue-800';
+                case 'Treinamento':
+                    return 'bg-yellow-100 text-yellow-800';
+                case 'Integração':
+                    return 'bg-purple-100 text-purple-800';
+                case 'Concluído':
+                    return 'bg-green-100 text-green-800';
+                default:
+                    return 'bg-gray-100 text-gray-800';
+            }
+        }
+    
+        // Função para obter cor baseada no score
+        function getScoreColor(score) {
+            if (score >= 80) return '#22c55e';
+            if (score >= 60) return '#eab308';
+            return '#ef4444';
+        }
+    
+        // Função para carregar dados do dashboard
+        function loadDashboardData() {
+            recentCandidatesList.innerHTML = '';
+            mockCandidatos.slice(0, 5).forEach(candidato => {
+                const li = document.createElement('li');
+                li.className = 'py-2';
+                li.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">${candidato.nome}</p>
+                            <p class="text-xs text-gray-500">${candidato.vaga}</p>
+                        </div>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getMatchBadgeClass(candidato.score >= 80 ? 'Alto' : candidato.score >= 60 ? 'Médio' : 'Baixo')}">
+                            ${candidato.score}%
+                        </span>
+                    </div>
+                `;
+                recentCandidatesList.appendChild(li);
+            });
+        }
+    
+        // Função para carregar candidatos recentes
+        function loadRecentCandidates() {
+            const recentCandidates = mockCandidatos.slice(0, 5);
+            recentCandidatesList.innerHTML = '';
+            recentCandidates.forEach(candidato => {
+                const li = document.createElement('li');
+                li.className = 'py-2';
+                li.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">${candidato.nome}</p>
+                            <p class="text-xs text-gray-500">${candidato.vaga}</p>
+                        </div>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getMatchBadgeClass(candidato.score >= 80 ? 'Alto' : candidato.score >= 60 ? 'Médio' : 'Baixo')}">
+                            ${candidato.score}%
+                        </span>
+                    </div>
+                `;
+                recentCandidatesList.appendChild(li);
+            });
+        }
+    
+        // Função para carregar vagas no select de análise
+        function loadVagasForAnalysis() {
+            vagaAnaliseSelect.innerHTML = '<option value="">Selecione uma vaga</option>';
+            mockVagas.forEach(vaga => {
+                const option = document.createElement('option');
+                option.value = vaga.titulo;
+                option.textContent = vaga.titulo;
+                vagaAnaliseSelect.appendChild(option);
+            });
+        }
+    
+        // Função para carregar lista de vagas
+        function loadVagasList(searchTerm = '', sortColumn = sortState.vagas.column, sortDirection = sortState.vagas.direction) {
+            let vagas = [...mockVagas];
+            if (searchTerm) {
+                vagas = vagas.filter(vaga => 
+                    vaga.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    vaga.departamento.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+            }
+            if (sortColumn) {
+                vagas.sort((a, b) => {
+                    let valueA = a[sortColumn];
+                    let valueB = b[sortColumn];
+                    if (sortColumn === 'data_criacao') {
+                        valueA = new Date(valueA);
+                        valueB = new Date(valueB);
+                    }
+                    if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
+                    if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+            vagasTableBody.innerHTML = '';
+            vagas.forEach(vaga => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${vaga.titulo}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${vaga.departamento}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${vagaStatusMap[vaga.status]?.bg || 'bg-gray-100'} ${vagaStatusMap[vaga.status]?.text || 'text-gray-800'}">
+                            ${vaga.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${getFormattedDate(vaga.data_criacao)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <button class="text-indigo-600 hover:text-indigo-900">Editar</button>
+                        <button class="ml-2 text-red-600 hover:text-red-900">Excluir</button>
+                    </td>
+                `;
+                vagasTableBody.appendChild(row);
+            });
+        }
+    
+        // Função para carregar lista de candidatos
+        function loadCandidatosList(filter = 'todos', searchTerm = '', sortColumn = sortState.candidatos.column, sortDirection = sortState.candidatos.direction) {
+            let candidatos = [...mockCandidatosDetalhado];
+            if (filter !== 'todos') {
+                candidatos = candidatos.filter(c => c.status.toLowerCase() === filter.toLowerCase());
+            }
+            if (searchTerm) {
+                candidatos = candidatos.filter(c => 
+                    c.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    c.vaga.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+            }
+            if (sortColumn) {
+                candidatos.sort((a, b) => {
+                    let valueA = a[sortColumn];
+                    let valueB = b[sortColumn];
+                    if (sortColumn === 'data_aplicacao') {
+                        valueA = new Date(valueA);
+                        valueB = new Date(valueB);
+                    } else if (sortColumn === 'score') {
+                        valueA = Number(valueA);
+                        valueB = Number(valueB);
+                    }
+                    if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
+                    if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+            candidatosTableBody.innerHTML = '';
+            candidatos.forEach(candidato => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${candidato.nome}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${candidato.vaga}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${candidatoStatusMap[candidato.status]?.bg || 'bg-gray-100'} ${candidatoStatusMap[candidato.status]?.text || 'text-gray-800'}">
+                            ${candidato.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${getFormattedDate(candidato.data_aplicacao)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${candidato.score}%</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <button class="text-indigo-600 hover:text-indigo-900">Ver Detalhes</button>
+                    </td>
+                `;
+                candidatosTableBody.appendChild(row);
+            });
+        }
+    
+        // Função para carregar lista de onboarding
+        function loadOnboardingList(searchTerm = '', sortColumn = sortState.onboarding.column, sortDirection = sortState.onboarding.direction) {
+            let onboarding = [...mockOnboarding];
+            if (searchTerm) {
+                onboarding = onboarding.filter(item => 
+                    item.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    item.vaga.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+            }
+            if (sortColumn) {
+                onboarding.sort((a, b) => {
+                    let valueA = a[sortColumn];
+                    let valueB = b[sortColumn];
+                    if (sortColumn === 'data_inicio') {
+                        valueA = new Date(valueA);
+                        valueB = new Date(valueB);
+                    } else if (sortColumn === 'progresso') {
+                        valueA = Number(valueA);
+                        valueB = Number(valueB);
+                    }
+                    if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
+                    if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+            onboardingTableBody.innerHTML = '';
+            onboarding.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.nome}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.vaga}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getOnboardingStatusClass(item.status)}">
+                            ${item.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${getFormattedDate(item.data_inicio)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.progresso}%</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <button class="text-indigo-600 hover:text-indigo-900">Atualizar</button>
+                    </td>
+                `;
+                onboardingTableBody.appendChild(row);
+            });
+        }
+    
+        // Função para cachear elementos DOM
+        function cacheDOMElements() {
+            sidebar = document.getElementById('sidebar');
+            sidebarToggleButton = document.getElementById('sidebar-toggle-button');
+            sidebarToggleIcon = document.getElementById('sidebar-toggle-icon');
+            mainContentArea = document.getElementById('main-content-area');
+            sidebarNav = document.getElementById('sidebar-nav');
+            mainTabs = document.getElementById('main-tabs');
+            pageContent = document.getElementById('page-content');
+            recentCandidatesList = document.getElementById('recent-candidates-list');
+            novaVagaButtonHeader = document.getElementById('nova-vaga-button-header');
+            novaVagaModal = document.getElementById('nova-vaga-modal');
+            closeModalButton = document.getElementById('close-modal-button');
+            cancelModalButton = document.getElementById('cancel-modal-button');
+            novaVagaForm = document.getElementById('nova-vaga-form');
+            salvarVagaSpinner = document.getElementById('salvar-vaga-spinner');
+            modalErrorMessage = document.getElementById('modal-error-message');
+            analisarCurriculoLink = document.getElementById('analisar-curriculo-link');
+            analisarButton = document.getElementById('analisar-button');
+            curriculoText = document.getElementById('curriculo-text');
+            analiseResultado = document.getElementById('analise-resultado');
+            analiseSpinner = document.getElementById('analise-spinner');
+            vagaAnaliseSelect = document.getElementById('vaga-analise-select');
+            configButton = document.getElementById('config-button');
+            vagasTableBody = document.getElementById('vagas-table-body');
+            novaVagaButtonVagas = document.getElementById('nova-vaga-button-vagas');
+            vagasSearchInput = document.getElementById('vagas-search');
+            vagasFilterButton = document.getElementById('vagas-filter-button');
+            rhToolsToggle = document.getElementById('rh-tools-toggle');
+            rhToolsSubmenu = document.getElementById('rh-tools-submenu');
+            rhToolsChevron = document.getElementById('rh-tools-chevron');
+            candidatosTableBody = document.getElementById('candidatos-table-body');
+            candidatosFilterTabs = document.getElementById('candidatos-filter-tabs');
+            adicionarCandidatoButton = document.getElementById('adicionar-candidato-button');
+            candidatosSearchInput = document.getElementById('candidatos-search');
+            candidatosFilterButton = document.getElementById('candidatos-filter-button');
+            onboardingTableBody = document.getElementById('onboarding-table-body');
+            onboardingSearchInput = document.getElementById('onboarding-search');
+            onboardingFilterButton = document.getElementById('onboarding-filter-button');
+            cvScoreCircleContainer = document.getElementById('cv-score-circle-container');
+            cvScoreText = document.getElementById('cv-score-text');
+            cvCandidateName = document.getElementById('cv-candidate-name');
+            cvMatchStatus = document.getElementById('cv-match-status');
+            cvQuickHighlights = document.getElementById('cv-quick-highlights');
+            cvCriteriaAnalysis = document.getElementById('cv-criteria-analysis');
+            cvKeywordsCloud = document.getElementById('cv-keywords-cloud');
+            cvSkillsComparison = document.getElementById('cv-skills-comparison');
+            cvInsightsSummary = document.getElementById('cv-insights-summary');
+            cvInterviewQuestions = document.getElementById('cv-interview-questions');
+            cvRedFlags = document.getElementById('cv-red-flags');
+            analiseResultadoTextoOriginal = document.getElementById('analise-resultado-texto-original');
+            resultadoTextoFallback = document.getElementById('resultado-texto-fallback');
+    
+            // Validação de elementos essenciais
+            const essentialElements = [
+                sidebar, sidebarToggleButton, sidebarToggleIcon, mainContentArea, sidebarNav, mainTabs, pageContent,
+                novaVagaButtonHeader, novaVagaModal, vagasTableBody, novaVagaButtonVagas, vagasSearchInput, vagasFilterButton,
+                recentCandidatesList, vagaAnaliseSelect, rhToolsToggle, rhToolsSubmenu, rhToolsChevron,
+                candidatosTableBody, candidatosFilterTabs, adicionarCandidatoButton, candidatosSearchInput, candidatosFilterButton,
+                onboardingTableBody, onboardingSearchInput, onboardingFilterButton,
+                analiseResultado, cvScoreCircleContainer, cvScoreText, cvCandidateName, cvMatchStatus, cvQuickHighlights,
+                cvCriteriaAnalysis, cvKeywordsCloud, cvSkillsComparison, cvInsightsSummary, cvInterviewQuestions, cvRedFlags,
+                analiseResultadoTextoOriginal, resultadoTextoFallback
+            ];
+            essentialElements.forEach((element, index) => {
+                if (!element) {
+                    console.error(`Elemento essencial não encontrado: índice ${index}`);
+                }
+            });
+        }
+    
+        // Função para alternar conteúdo
+        function switchContent(targetId) {
+            // Validar targetId
+            if (!targetId || typeof targetId !== 'string') {
+                console.error('targetId inválido:', targetId);
+                targetId = 'dashboard';
+            }
+    
+            // Esconder todas as seções
+            const sections = document.querySelectorAll('.page-section');
+            sections.forEach(section => {
+                section.classList.add('hidden');
+            });
+    
+            // Mostrar a seção correspondente
+            const targetSection = document.getElementById(`${targetId}-content`);
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+            } else {
+                console.error(`Seção não encontrada: #${targetId}-content`);
+                // Fallback para dashboard
+                const dashboardSection = document.getElementById('dashboard-content');
+                if (dashboardSection) {
+                    dashboardSection.classList.remove('hidden');
+                    targetId = 'dashboard';
+                } else {
+                    console.error('Fallback para dashboard falhou: #dashboard-content não encontrado');
+                    return;
+                }
+            }
+    
+            // Carregar dados específicos da seção
+            switch (targetId) {
+                case 'dashboard':
+                    loadDashboardData();
+                    loadRecentCandidates();
+                    break;
+                case 'vagas':
+                    loadVagasList();
+                    break;
+                case 'candidatos':
+                    loadCandidatosList();
+                    break;
+                case 'onboarding':
+                    loadOnboardingList();
+                    break;
+                case 'analisar-curriculo':
+                    loadVagasForAnalysis();
+                    break;
+                case 'configuracoes':
+                    // Sem carregamento de dados específico
+                    break;
+                default:
+                    console.warn(`Nenhum carregamento de dados configurado para: ${targetId}`);
+            }
+    
+            // Atualizar aba ativa
+            updateActiveTab(targetId);
+        }
+    
+        // Função para atualizar aba ativa
+        function updateActiveTab(targetId) {
+            const activeClasses = ['text-gray-700', 'bg-gray-100', 'border', 'border-gray-300'];
+            const defaultClasses = ['text-gray-500', 'hover:text-gray-700', 'border', 'border-transparent'];
+            const links = mainTabs.querySelectorAll('.tab-link');
+            links.forEach(link => {
+                link.classList.remove(...activeClasses);
+                link.classList.add(...defaultClasses);
+                if (link.getAttribute('href') === `#${targetId}`) {
+                    link.classList.add(...activeClasses);
+                    link.classList.remove(...defaultClasses);
+                }
+            });
+        }
+    
+        // Função para exibir análise visual do currículo
+        function displayVisualCvAnalysis(analysisData) {
+            if (!analysisData || typeof analysisData !== 'object') {
+                console.error('Dados de análise inválidos recebidos:', analysisData);
+                analiseResultado.innerHTML = '<p class="text-red-500 text-center">Erro ao processar dados da análise.</p>';
+                return;
+            }
+    
+            // Card 1: Score e Resumo
+            cvCandidateName.textContent = analysisData.candidateName || 'Candidato';
+            const score = analysisData.overallScore || 0;
+            cvScoreText.textContent = `${score}%`;
+            const scoreColor = getScoreColor(score);
+            cvScoreCircleContainer.style.borderColor = '#e5e7eb';
+            cvScoreText.style.color = scoreColor;
+            cvMatchStatus.textContent = analysisData.matchStatus || 'Status Indefinido';
+            cvQuickHighlights.innerHTML = '';
+            if (analysisData.quickHighlights && analysisData.quickHighlights.length > 0) {
+                analysisData.quickHighlights.forEach(highlight => {
+                    const icon = highlight.type === 'positive' ? 'fa-check' : 'fa-exclamation-triangle';
+                    const backgroundColor = highlight.type === 'positive' ? 'bg-green-100' : 'bg-yellow-100';
+                    const textColor = highlight.type === 'positive' ? 'text-green-800' : 'text-yellow-800';
+                    const span = document.createElement('span');
+                    span.className = `inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${backgroundColor} ${textColor}`;
+                    span.innerHTML = `<i class="fas ${icon} mr-1"></i> ${highlight.text}`;
+                    cvQuickHighlights.appendChild(span);
+                });
+            } else {
+                cvQuickHighlights.innerHTML = '<span class="text-xs text-gray-500">Nenhum destaque rápido.</span>';
+            }
+    
+            // Card 2: Critérios
+            cvCriteriaAnalysis.innerHTML = '';
+            if (analysisData.criteriaScores && Object.keys(analysisData.criteriaScores).length > 0) {
+                for (const [criterion, criterionScore] of Object.entries(analysisData.criteriaScores)) {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'criteria-item';
+                    const criterionColor = getScoreColor(criterionScore);
+                    itemDiv.innerHTML = `
+                        <div class="flex justify-between text-xs text-gray-600 mb-1">
+                            <span>${criterion}</span>
+                            <span style="color: ${criterionColor}; font-weight: 500;">${criterionScore}%</span>
+                        </div>
+                        <div class="cv-criteria-bar-bg">
+                            <div class="cv-criteria-bar-fill" style="width: ${criterionScore}%; background-color: ${criterionColor};"></div>
+                        </div>
+                    `;
+                    cvCriteriaAnalysis.appendChild(itemDiv);
+                }
+            } else {
+                cvCriteriaAnalysis.innerHTML = '<p class="text-xs text-gray-500">Análise de critérios não disponível.</p>';
+            }
+    
+            // Card 3: Keywords
+            cvKeywordsCloud.innerHTML = '';
+            if (analysisData.keywordsFound && analysisData.keywordsFound.length > 0) {
+                analysisData.keywordsFound.forEach(keyword => {
+                    const span = document.createElement('span');
+                    span.className = 'cv-keyword-tag';
+                    span.textContent = keyword;
+                    cvKeywordsCloud.appendChild(span);
+                });
+            } else {
+                cvKeywordsCloud.innerHTML = '<span class="text-xs text-gray-500">Nenhuma palavra-chave relevante encontrada.</span>';
+            }
+            cvSkillsComparison.innerHTML = '';
+            if (analysisData.requiredKeywords && analysisData.requiredKeywords.length > 0) {
+                const foundKeywordsLowercase = (analysisData.keywordsFound || []).map(keyword => keyword.toLowerCase());
+                const unorderedList = document.createElement('ul');
+                unorderedList.className = 'space-y-1';
+                analysisData.requiredKeywords.forEach(requiredKeyword => {
+                    const listItem = document.createElement('li');
+                    const found = foundKeywordsLowercase.includes(requiredKeyword.toLowerCase());
+                    listItem.innerHTML = `
+                        <i class="fas ${found ? 'fa-check-circle text-green-500' : 'fa-times-circle text-red-500'} mr-2"></i>
+                        ${requiredKeyword}
+                    `;
+                    unorderedList.appendChild(listItem);
+                });
+                cvSkillsComparison.appendChild(unorderedList);
+            } else {
+                cvSkillsComparison.innerHTML = '<p class="text-xs text-gray-500">Nenhum requisito de habilidade definido para comparação.</p>';
+            }
+    
+            // Card 4: Insights
+            cvInsightsSummary.innerHTML = `<p>${analysisData.summary || 'Resumo não disponível.'}</p>`;
+            cvInterviewQuestions.innerHTML = '';
+            if (analysisData.interviewQuestions && analysisData.interviewQuestions.length > 0) {
+                analysisData.interviewQuestions.forEach(question => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = question;
+                    cvInterviewQuestions.appendChild(listItem);
+                });
+            } else {
+                cvInterviewQuestions.innerHTML = '<li>Nenhuma sugestão de pergunta gerada.</li>';
+            }
+            cvRedFlags.innerHTML = '';
+            if (analysisData.redFlags && analysisData.redFlags.length > 0) {
+                const heading = document.createElement('h6');
+                heading.className = 'text-xs font-medium text-red-600 mb-1 uppercase mt-3';
+                heading.textContent = 'Pontos de Atenção (Red Flags)';
+                cvRedFlags.appendChild(heading);
+                const unorderedList = document.createElement('ul');
+                unorderedList.className = 'list-disc list-inside text-sm text-red-700 space-y-1';
+                analysisData.redFlags.forEach(flag => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = flag;
+                    unorderedList.appendChild(listItem);
+                });
+                cvRedFlags.appendChild(unorderedList);
+            }
+        }
+    
+        // Função para analisar currículo com IA
+        async function analyzeCurriculumWithAI(text, jobTitle) {
+            if (!text) {
+                alert('Por favor, insira o texto do currículo.');
+                return;
+            }
+            if (!jobTitle) {
+                alert('Por favor, selecione uma vaga.');
+                return;
+            }
+    
+            analiseSpinner.classList.remove('hidden');
+            analisarButton.disabled = true;
+            analiseResultado.classList.remove('hidden');
+            analiseResultadoTextoOriginal.classList.add('hidden');
+            cvScoreText.textContent = '--%';
+            cvCandidateName.textContent = 'Analisando com IA...';
+            cvMatchStatus.textContent = '';
+            cvQuickHighlights.innerHTML = '<i class="fas fa-spinner fa-spin text-gray-500"></i>';
+            cvCriteriaAnalysis.innerHTML = '<p class="text-xs text-gray-500">Calculando...</p>';
+            cvKeywordsCloud.innerHTML = '';
+            cvSkillsComparison.innerHTML = '';
+            cvInsightsSummary.innerHTML = '<p class="text-xs text-gray-500">Gerando resumo...</p>';
+            cvInterviewQuestions.innerHTML = '';
+            cvRedFlags.innerHTML = '';
+    
+            // Obter requisitos da vaga
+            const job = mockVagas.find(vaga => vaga.titulo === jobTitle);
+            const requirements = job ? job.requisitos : 'Não especificado';
+    
+            // Construir prompt para a API
+            const prompt = `
+                Analise o seguinte currículo em relação à vaga de "${jobTitle}" com os requisitos: "${requirements}".
+                Retorne a análise exclusivamente em formato JSON, sem nenhum texto antes ou depois do JSON.
+                O JSON deve conter os seguintes campos:
+                - "candidateName": (string) Nome do candidato ou "Candidato Anônimo" se não identificado.
+                - "overallScore": (number) Pontuação de compatibilidade (0 a 100).
+                - "matchStatus": (string) "Altamente Recomendado", "Recomendado", "Considerar com Cautela" ou "Não Recomendado".
+                - "quickHighlights": (array) Lista de até 4 objetos com { "type": "positive" | "warning", "text": string }.
+                - "criteriaScores": (object) Objeto com { "Experiência Profissional": number, "Habilidades Técnicas": number, "Formação Acadêmica": number, "Idiomas": number }, cada um de 0 a 100.
+                - "keywordsFound": (array) Lista de palavras-chave relevantes encontradas no currículo.
+                - "requiredKeywords": (array) Lista de palavras-chave dos requisitos da vaga.
+                - "summary": (string) Resumo da análise, máximo de 100 palavras.
+                - "interviewQuestions": (array) Lista de 3 a 5 perguntas para entrevista.
+                - "redFlags": (array) Lista de pontos de atenção ou inconsistências.
+    
+                Currículo:
+                ${text}
+            `;
+    
+            const requestBody = {
+                contents: [
+                    {
+                        parts: [
+                            { text: prompt }
+                        ]
+                    }
+                ],
+                generationConfig: {
+                    responseMimeType: 'application/json',
+                    temperature: 0.7
+                }
+            };
+    
+            try {
+                const response = await fetch(GOOGLE_AI_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+    
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Erro ${response.status}: ${errorText}`);
+                }
+    
+                const data = await response.json();
+                const analysisJsonString = data.candidates[0].content.parts[0].text;
+    
+                if (!analysisJsonString) {
+                    throw new Error('Resposta da IA vazia ou em formato inesperado.');
+                }
+    
+                let analysisResult;
+                try {
+                    analysisResult = JSON.parse(analysisJsonString);
+                    displayVisualCvAnalysis(analysisResult);
+                } catch (parseError) {
+                    console.error('Erro ao parsear JSON da IA:', parseError);
+                    resultadoTextoFallback.textContent = analysisJsonString || 'Não foi possível obter a análise em formato de texto.';
+                    analiseResultadoTextoOriginal.classList.remove('hidden');
+                    cvCandidateName.textContent = 'Erro de Formato';
+                    cvInsightsSummary.innerHTML = '<p class="text-red-500">A IA não retornou um formato JSON válido. Veja o texto original abaixo.</p>';
+                }
+            } catch (error) {
+                console.error('Erro ao chamar Google AI API:', error);
+                cvCandidateName.textContent = 'Erro na Análise';
+                cvInsightsSummary.innerHTML = `<p class="text-red-500">Erro ao realizar análise: ${error.message}</p>`;
+            } finally {
+                analiseSpinner.classList.add('hidden');
+                analisarButton.disabled = false;
+            }
+        }
+    
+        // Função para salvar nova vaga
+        function saveNewVaga(event) {
+            event.preventDefault();
+            salvarVagaSpinner.classList.remove('hidden');
+            modalErrorMessage.classList.add('hidden');
+    
+            const formData = new FormData(novaVagaForm);
+            const newVaga = {
+                id: mockVagas.length + 1,
+                titulo: formData.get('titulo'),
+                departamento: formData.get('departamento'),
+                status: formData.get('status'),
+                data_criacao: new Date().toISOString(),
+                descricao: formData.get('descricao'),
+                requisitos: formData.get('requisitos')
+            };
+    
+            setTimeout(() => {
+                mockVagas.push(newVaga);
+                novaVagaModal.classList.add('modal-hidden');
+                novaVagaModal.classList.remove('modal-visible');
+                salvarVagaSpinner.classList.add('hidden');
+                novaVagaForm.reset();
+                loadVagasList();
+                loadVagasForAnalysis();
+            }, 1000);
+        }
+    
+        // Função para abrir modal de nova vaga
+        function openNovaVagaModal() {
+            novaVagaModal.classList.remove('modal-hidden');
+            novaVagaModal.classList.add('modal-visible');
+            novaVagaForm.reset();
+            modalErrorMessage.classList.add('hidden');
+        }
+    
+        // Função para manipular clique de ordenação
+        function handleSortClick(event, tableType) {
+            const target = event.target.closest('.sort-column');
+            if (!target) return;
+            const column = target.dataset.sort;
+            if (!column) return;
+    
+            if (sortState[tableType].column === column) {
+                sortState[tableType].direction = sortState[tableType].direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortState[tableType].column = column;
+                sortState[tableType].direction = 'asc';
+            }
+    
+            document.querySelectorAll(`#${tableType}-table-body th.sort-column`).forEach(th => {
+                th.innerHTML = th.innerHTML.replace(/ <i class="fas fa-sort.*"><\/i>/, '');
+            });
+    
+            const iconClass = sortState[tableType].direction === 'asc' ? 'fa-sort-up' : 'fa-sort-down';
+            target.innerHTML += ` <i class="fas ${iconClass}"></i>`;
+    
+            if (tableType === 'vagas') {
+                loadVagasList(vagasSearchInput.value);
+            } else if (tableType === 'candidatos') {
+                const activeFilter = candidatosFilterTabs.querySelector('.filter-tab-active')?.dataset.filter || 'todos';
+                loadCandidatosList(activeFilter, candidatosSearchInput.value);
+            } else if (tableType === 'onboarding') {
+                loadOnboardingList(onboardingSearchInput.value);
+            }
+        }
+    
+        // Função para configurar ordenação de tabela
+        function setupTableSorting(tableBodyId, tableType) {
+            const tableBody = document.getElementById(tableBodyId);
+            if (tableBody) {
+                tableBody.addEventListener('click', event => handleSortClick(event, tableType));
+            }
+        }
+    
+        // Função para manipular busca
+        function handleSearch(event, tableType) {
+            const searchTerm = event.target.value;
+            if (tableType === 'vagas') {
+                loadVagasList(searchTerm);
+            } else if (tableType === 'candidatos') {
+                const activeFilter = candidatosFilterTabs.querySelector('.filter-tab-active')?.dataset.filter || 'todos';
+                loadCandidatosList(activeFilter, searchTerm);
+            } else if (tableType === 'onboarding') {
+                loadOnboardingList(searchTerm);
+            }
+        }
+    
+        // Função para configurar busca em tabela
+        function setupTableSearch(inputId, tableType) {
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.addEventListener('input', event => handleSearch(event, tableType));
+            }
+        }
+    
+        // Mapeamento de status para classes de estilo
+        const vagaStatusMap = {
+            'Aberta': { bg: 'bg-green-100', text: 'text-green-800' },
+            'Fechada': { bg: 'bg-red-100', text: 'text-red-800' },
+            'Em Andamento': { bg: 'bg-yellow-100', text: 'text-yellow-800' }
+        };
+    
+        const candidatoStatusMap = {
+            'Em Análise': { bg: 'bg-blue-100', text: 'text-blue-800' },
+            'Entrevista Agendada': { bg: 'bg-yellow-100', text: 'text-yellow-800' },
+            'Aprovado': { bg: 'bg-green-100', text: 'text-green-800' },
+            'Rejeitado': { bg: 'bg-red-100', text: 'text-red-800' }
+        };
+    
+        // Inicialização da aplicação
+        document.addEventListener('DOMContentLoaded', () => {
+            cacheDOMElements();
+            loadDashboardData();
+            loadRecentCandidates();
+    
+            // Configurar toggle da sidebar
+            sidebarToggleButton.addEventListener('click', () => {
+                sidebar.classList.toggle('w-64');
+                sidebar.classList.toggle('w-20');
+                mainContentArea.classList.toggle('ml-64');
+                mainContentArea.classList.toggle('ml-20');
+                sidebarToggleIcon.classList.toggle('fa-chevron-left');
+                sidebarToggleIcon.classList.toggle('fa-chevron-right');
+                if (sidebar.classList.contains('w-20')) {
+                    rhToolsSubmenu.classList.add('hidden');
+                    rhToolsChevron.classList.remove('rotate-180');
+                }
+            });
+    
+            // Configurar toggle do submenu de Ferramentas de RH
+            rhToolsToggle.addEventListener('click', (event) => {
+                event.preventDefault();
+                if (!sidebar.classList.contains('w-20')) {
+                    rhToolsSubmenu.classList.toggle('hidden');
+                    rhToolsChevron.classList.toggle('rotate-180');
+                }
+            });
+    
+            // Configurar navegação da sidebar e submenu
+            const navLinks = sidebarNav.querySelectorAll('a.nav-link:not(#rh-tools-toggle), a.submenu-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    const href = link.getAttribute('href');
+                    if (href && href.startsWith('#')) {
+                        const targetId = href.substring(1);
+                        switchContent(targetId);
+                        // Fechar submenu se for um link de submenu
+                        if (link.classList.contains('submenu-link') && !rhToolsSubmenu.classList.contains('hidden')) {
+                            rhToolsSubmenu.classList.add('hidden');
+                            rhToolsChevron.classList.remove('rotate-180');
+                        }
+                    } else {
+                        console.error('href inválido:', href);
+                    }
+                });
+            });
+    
+            // Configurar navegação das abas do header
+            const tabLinks = mainTabs.querySelectorAll('.tab-link');
+            tabLinks.forEach(link => {
+                link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    const href = link.getAttribute('href');
+                    if (href && href.startsWith('#')) {
+                        const targetId = href.substring(1);
+                        switchContent(targetId);
+                    } else {
+                        console.error('href inválido:', href);
+                    }
+                });
+            });
+    
+            // Configurar filtros de candidatos
+            const filterButtons = candidatosFilterTabs.querySelectorAll('.filter-tab');
+            filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    filterButtons.forEach(btn => {
+                        btn.classList.remove('filter-tab-active');
+                        btn.classList.add('filter-tab-inactive');
+                    });
+                    button.classList.add('filter-tab-active');
+                    button.classList.remove('filter-tab-inactive');
+                    loadCandidatosList(button.dataset.filter, candidatosSearchInput.value);
+                });
+            });
+    
+            // Configurar botões de nova vaga
+            novaVagaButtonHeader.addEventListener('click', openNovaVagaModal);
+            novaVagaButtonVagas.addEventListener('click', openNovaVagaModal);
+    
+            // Configurar botões de fechar modal
+            const closeButtons = [closeModalButton, cancelModalButton];
+            closeButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    novaVagaModal.classList.add('modal-hidden');
+                    novaVagaModal.classList.remove('modal-visible');
+                });
+            });
+    
+            // Fechar modal ao clicar fora
+            novaVagaModal.addEventListener('click', (event) => {
+                if (event.target === novaVagaModal) {
+                    novaVagaModal.classList.add('modal-hidden');
+                    novaVagaModal.classList.remove('modal-visible');
+                }
+            });
+    
+            // Configurar formulário de nova vaga
+            novaVagaForm.addEventListener('submit', saveNewVaga);
+    
+            // Configurar botão de configurações
+            configButton.addEventListener('click', () => {
+                switchContent('configuracoes');
+            });
+    
+            // Configurar botão de análise de currículo
+            analisarButton.addEventListener('click', () => {
+                if (!vagaAnaliseSelect.value) {
+                    alert('Por favor, selecione uma vaga para a análise.');
+                    return;
+                }
+                analyzeCurriculumWithAI(curriculoText.value, vagaAnaliseSelect.value);
+            });
+    
+            // Configurar outros botões
+            adicionarCandidatoButton.addEventListener('click', () => {
+                alert('Funcionalidade "Adicionar Candidato" não implementada.');
+            });
+            vagasFilterButton.addEventListener('click', () => {
+                alert('Funcionalidade "Filtro de Vagas" não implementada.');
+            });
+            candidatosFilterButton.addEventListener('click', () => {
+                alert('Funcionalidade "Filtro Avançado de Candidatos" não implementada.');
+            });
+            onboardingFilterButton.addEventListener('click', () => {
+                alert('Funcionalidade "Filtro de Onboarding" não implementada.');
+            });
+    
+            // Configurar ordenação e busca
+            setupTableSorting('vagas-table-body', 'vagas');
+            setupTableSorting('candidatos-table-body', 'candidatos');
+            setupTableSorting('onboarding-table-body', 'onboarding');
+            setupTableSearch('vagas-search', 'vagas');
+            setupTableSearch('candidatos-search', 'candidatos');
+            setupTableSearch('onboarding-search', 'onboarding');
+    
+            // Inicializar com o dashboard
+            switchContent('dashboard');
+        });
+    </script>
 </body>
 </html>
